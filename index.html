@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Solana Wallet Explorer</title>
+    <style>
+        body {
+            background: #111827;
+            color: #10f490;
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        
+        .search-bar {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        input {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px 0 0 8px;
+            font-size: 16px;
+        }
+        
+        button {
+            padding: 0.75rem 1rem;
+            background: #10f490;
+            color: black;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+        }
+        
+        .card-section {
+            background: #1f2937;
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="walletInput" placeholder="Enter Solana Wallet Address..." />
+                <button onclick="fetchWalletData()">Search</button>
+            </div>
+
+            <div id="overview" class="card-section">
+                <h3>Overview</h3>
+                <p><strong>Wallet:</strong> <span id="walletAddress">-</span></p>
+                <p><strong>SOL Balance:</strong> <span id="solBalance">-</span></p>
+            </div>
+
+            <div id="transactions" class="card-section">
+                <h3>Transactions</h3>
+                <ul id="transactionList"></ul>
+            </div>
+
+            <div id="blocks" class="card-section">
+                <h3>Blocks</h3>
+                <p>Coming Soon</p>
+            </div>
+
+            <div id="transfers" class="card-section">
+                <h3>Transfers</h3>
+                <ul id="transferList"></ul>
+            </div>
+
+            <div id="tokens" class="card-section">
+                <h3>Tokens</h3>
+                <ul id="tokenList"></ul>
+            </div>
+        </div>
+
+        <script src="app.js">
+            const API_KEY = "YOUR_API_KEY"; // <--- REPLACE THIS WITH YOUR REAL HELIUS KEY
+            const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${API_KEY}`;
+
+            async function loadData() {
+                const address = document.getElementById("walletInput").value.trim();
+                if (!address) return alert("Please enter a wallet address.");
+
+                document.getElementById("walletAddress").innerText = address;
+                document.getElementById("balance").innerText = "Loading...";
+                document.getElementById("txList").innerHTML = "<li>Loading...</li>";
+                document.getElementById("tokenList").innerHTML = "<li>Loading...</li>";
+
+                // 1. Get balance
+                const balanceRes = await fetch(HELIUS_RPC, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: 1,
+                        method: "getBalance",
+                        params: [address]
+                    })
+                });
+                const balanceData = await balanceRes.json();
+                const lamports = balanceData.result.value;
+                document.getElementById("balance").innerText = (lamports / 1e9).toFixed(4) + " SOL";
+
+                // 2. Get transactions
+                const txRes = await fetch(`https://api.helius.xyz/v0/addresses/${address}/transactions?api-key=${API_KEY}&limit=5`);
+                const txData = await txRes.json();
+                const txList = document.getElementById("txList");
+                txList.innerHTML = "";
+                txData.forEach(tx => {
+                    const li = document.createElement("li");
+                    li.innerText = `Signature: ${tx.signature.slice(0, 20)}... | Slot: ${tx.slot}`;
+                    txList.appendChild(li);
+                });
+
+                // 3. Get tokens
+                const tokenRes = await fetch(`https://api.helius.xyz/v0/addresses/${address}/tokens?api-key=${API_KEY}`);
+                const tokenData = await tokenRes.json();
+                const tokenList = document.getElementById("tokenList");
+                tokenList.innerHTML = "";
+                tokenData.tokens.slice(0, 5).forEach(token => {
+                    const li = document.createElement("li");
+                    const name = token.tokenInfo ? .name || "Unknown Token";
+                    const amount = token.amount / 10 ** token.decimals;
+                    li.innerText = `${name}: ${amount.toFixed(2)}`;
+                    tokenList.appendChild(li);
+                });
+            }
+        </script>
+
+
+    </body>
+
+</html>

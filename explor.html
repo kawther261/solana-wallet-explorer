@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Solana Wallet Tracker</title>
+</head>
+
+<body style="background:#111;color:white;font-family:sans-serif;padding:2rem">
+    <h1>🔍 Solana Wallet Tracker</h1>
+
+    <input id="walletInput" type="text" placeholder="Enter Solana address" style="width:300px;padding:10px;">
+    <button onclick="fetchWalletData()" style="padding:10px;">Check Wallet</button>
+
+    <div id="result" style="margin-top:2rem;font-size:1.2rem"></div>
+
+    <script>
+        const API_KEY = '885798db-1e3c-41e9-b481-12c784bac708'; // Replace with your Helius or QuickNode key
+
+        async function fetchSolanaData() {
+            try {
+                const solPriceRes = await fetch('https://price.jup.ag/v4/price?ids=SOL');
+                const solPriceData = await solPriceRes.json();
+                const solPrice = solPriceData.data.SOL.price;
+
+                document.getElementById('solPrice').innerText = `$${solPrice.toFixed(2)}`;
+
+                // Mock values (replace with actual API endpoints if available)
+                document.getElementById('marketCap').innerText = `$81.48B`;
+                document.getElementById('volume24h').innerText = `$2.71B`;
+                document.getElementById('circulatingSupply').innerText = `522.42M SOL`;
+
+            } catch (err) {
+                console.error('Error fetching data:', err);
+            }
+        }
+    </script>
+</body>
+
+</html>
